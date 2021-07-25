@@ -31,8 +31,6 @@ from tqdm import tqdm, trange
 
 import transformers
 from transformers import (
-    MODEL_FOR_QUESTION_ANSWERING_MAPPING,
-    WEIGHTS_NAME,
     AdamW,
 #     AutoConfig,
 #     AutoModelForQuestionAnswering,
@@ -51,17 +49,10 @@ from transformers.data.metrics.squad_metrics import (
 from transformers.data.processors.squad import SquadResult, SquadV1Processor, SquadV2Processor
 from transformers.trainer_utils import is_main_process
 
-
-try:
-    from torch.utils.tensorboard import SummaryWriter
-except ImportError:
-    from tensorboardX import SummaryWriter
-
-
 logger = logging.getLogger(__name__)
 
-MODEL_CONFIG_CLASSES = list(MODEL_FOR_QUESTION_ANSWERING_MAPPING.keys())
-MODEL_TYPES = tuple(conf.model_type for conf in MODEL_CONFIG_CLASSES)
+# MODEL_CONFIG_CLASSES = list(MODEL_FOR_QUESTION_ANSWERING_MAPPING.keys())
+# MODEL_TYPES = tuple(conf.model_type for conf in MODEL_CONFIG_CLASSES)
 
 
 def set_seed(args):
@@ -192,17 +183,17 @@ def train(args, train_dataset, model, tokenizer):
                 "end_positions": batch[4],
             }
 
-            if args.model_type in ["xlm", "roberta", "distilbert", "camembert", "bart", "longformer"]:
-                del inputs["token_type_ids"]
+            # if args.model_type in ["xlm", "roberta", "distilbert", "camembert", "bart", "longformer"]:
+            #     del inputs["token_type_ids"]
 
-            if args.model_type in ["xlnet", "xlm"]:
-                inputs.update({"cls_index": batch[5], "p_mask": batch[6]})
-                if args.version_2_with_negative:
-                    inputs.update({"is_impossible": batch[7]})
-                if hasattr(model, "config") and hasattr(model.config, "lang2id"):
-                    inputs.update(
-                        {"langs": (torch.ones(batch[0].shape, dtype=torch.int64) * args.lang_id).to(args.device)}
-                    )
+            # if args.model_type in ["xlnet", "xlm"]:
+            #     inputs.update({"cls_index": batch[5], "p_mask": batch[6]})
+            #     if args.version_2_with_negative:
+            #         inputs.update({"is_impossible": batch[7]})
+            #     if hasattr(model, "config") and hasattr(model.config, "lang2id"):
+            #         inputs.update(
+            #             {"langs": (torch.ones(batch[0].shape, dtype=torch.int64) * args.lang_id).to(args.device)}
+            #         )
 
             outputs = model(**inputs)
             # model outputs are always tuple in transformers (see doc)
@@ -305,19 +296,19 @@ def evaluate(args, model, tokenizer, prefix=""):
                 "token_type_ids": batch[2],
             }
 
-            if args.model_type in ["xlm", "roberta", "distilbert", "camembert", "bart", "longformer"]:
-                del inputs["token_type_ids"]
+            # if args.model_type in ["xlm", "roberta", "distilbert", "camembert", "bart", "longformer"]:
+            #     del inputs["token_type_ids"]
 
             feature_indices = batch[3]
 
-            # XLNet and XLM use more arguments for their predictions
-            if args.model_type in ["xlnet", "xlm"]:
-                inputs.update({"cls_index": batch[4], "p_mask": batch[5]})
-                # for lang_id-sensitive xlm models
-                if hasattr(model, "config") and hasattr(model.config, "lang2id"):
-                    inputs.update(
-                        {"langs": (torch.ones(batch[0].shape, dtype=torch.int64) * args.lang_id).to(args.device)}
-                    )
+            # # XLNet and XLM use more arguments for their predictions
+            # if args.model_type in ["xlnet", "xlm"]:
+            #     inputs.update({"cls_index": batch[4], "p_mask": batch[5]})
+            #     # for lang_id-sensitive xlm models
+            #     if hasattr(model, "config") and hasattr(model.config, "lang2id"):
+            #         inputs.update(
+            #             {"langs": (torch.ones(batch[0].shape, dtype=torch.int64) * args.lang_id).to(args.device)}
+            #         )
             outputs = model(**inputs)
 
         for i, feature_index in enumerate(feature_indices):
@@ -363,41 +354,41 @@ def evaluate(args, model, tokenizer, prefix=""):
         output_null_log_odds_file = None
 
     # XLNet and XLM use a more complex post-processing procedure
-    if args.model_type in ["xlnet", "xlm"]:
-        start_n_top = model.config.start_n_top if hasattr(model, "config") else model.module.config.start_n_top
-        end_n_top = model.config.end_n_top if hasattr(model, "config") else model.module.config.end_n_top
+    # if args.model_type in ["xlnet", "xlm"]:
+    #     start_n_top = model.config.start_n_top if hasattr(model, "config") else model.module.config.start_n_top
+    #     end_n_top = model.config.end_n_top if hasattr(model, "config") else model.module.config.end_n_top
 
-        predictions = compute_predictions_log_probs(
-            examples,
-            features,
-            all_results,
-            args.n_best_size,
-            args.max_answer_length,
-            output_prediction_file,
-            output_nbest_file,
-            output_null_log_odds_file,
-            start_n_top,
-            end_n_top,
-            args.version_2_with_negative,
-            tokenizer,
-            args.verbose_logging,
-        )
-    else:
-        predictions = compute_predictions_logits(
-            examples,
-            features,
-            all_results,
-            args.n_best_size,
-            args.max_answer_length,
-            args.do_lower_case,
-            output_prediction_file,
-            output_nbest_file,
-            output_null_log_odds_file,
-            args.verbose_logging,
-            args.version_2_with_negative,
-            args.null_score_diff_threshold,
-            tokenizer,
-        )
+    #     predictions = compute_predictions_log_probs(
+    #         examples,
+    #         features,
+    #         all_results,
+    #         args.n_best_size,
+    #         args.max_answer_length,
+    #         output_prediction_file,
+    #         output_nbest_file,
+    #         output_null_log_odds_file,
+    #         start_n_top,
+    #         end_n_top,
+    #         args.version_2_with_negative,
+    #         tokenizer,
+    #         args.verbose_logging,
+    #     )
+    # else:
+    predictions = compute_predictions_logits(
+        examples,
+        features,
+        all_results,
+        args.n_best_size,
+        args.max_answer_length,
+        args.do_lower_case,
+        output_prediction_file,
+        output_nbest_file,
+        output_null_log_odds_file,
+        args.verbose_logging,
+        args.version_2_with_negative,
+        args.null_score_diff_threshold,
+        tokenizer,
+    )
 
     # Compute the F1 and exact scores.
     results = squad_evaluate(examples, predictions)
@@ -481,13 +472,13 @@ def main():
     parser = argparse.ArgumentParser()
 
     # Required parameters
-    parser.add_argument(
-        "--model_type",
-        default=None,
-        type=str,
-        required=True,
-        help="Model type selected in the list: " + ", ".join(MODEL_TYPES),
-    )
+    # parser.add_argument(
+    #     "--model_type",
+    #     default=None,
+    #     type=str,
+    #     required=True,
+    #     help="Model type selected in the list: " + ", ".join(MODEL_TYPES),
+    # )
     parser.add_argument(
         "--model_name_or_path",
         default=None,
@@ -736,7 +727,7 @@ def main():
         # Make sure only the first process in distributed training will download model & vocab
         torch.distributed.barrier()
 
-    args.model_type = args.model_type.lower()
+    # args.model_type = args.model_type.lower()
     config = BertConfig.from_pretrained(
         args.config_name if args.config_name else args.model_name_or_path,
         cache_dir=args.cache_dir if args.cache_dir else None,
