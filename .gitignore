@@ -2,3 +2,5 @@
 clustering/dask-worker-space/
 */.ipynb_checkpoints/
 submission_notes
+.vscode
+.ipynb_checkpoints/
