@@ -2,13 +2,15 @@
 A Springboard Capstone Project
 
 ## Proposal:
-The Transformer architecture has pushed SOTA NLP  to new heights in the past few years.  As with many Deep Learning architectures, explainability is low and getting insight into why these mechanisms work so well in specific situations can be problematic.
+The Transformer architecture has pushed state-of-the-art Natural Language Processing to new heights in the past few years.  As with so many Deep Learning architectures, explainability is low and getting insight into why these mechanisms work so well in specific situations can be problematic.
 
 Projects such as [BertViz](https://github.com/jessevig/bertviz), [Tensor2Tensor](https://github.com/tensorflow/tensor2tensor), and [Captum](https://captum.ai) work towards solving this problem by providing tools to visualize the attention patterns produced by one or more attention heads across layers of a Transformer, or the query and key vectors that are used to compute attention heads.
 
-While these type of visualizations of the attention heads are interesting, and can definitely provide insight into specific examples, it is very difficult for the human eye to correlate and find meaning in the patterns in these images - especially across many heads,layers, and input examples.  I propose to utilize a pipeline of transformations and traditional machine learning analysis and clustering methods to identify patterns across all of the attention heads produced across a dataset. This, I believe, will give some insight into the ability of transformers ability to encode information into the attention mechanism, and information about the locality in the layer/head matrix.
+While these type of visualizations of the attention heads are ... visually interesting, and can definitely provide insight into specific examples, it is very difficult for the human eye to correlate and find meaning in the patterns in these images - especially across many heads,layers, and input examples.
 
-The attention computed by each head in each layer of the Transformer architecture is a matrix of values made up elements corresponding to the mapping of each token in the input sequence to every other token.  The proposed architecture will consist of collecting these attention matrices, and transforming them into a more computationally feasible dimensional space by utilizing a SOTA image classification model for feature extraction.  The output will then be analyzed by more traditional machine learning methods such as KMeans.  Learned clusters can then be correlated with their corresponding head, layer, and input example for insight. 
+Here we propose to utilize a series of transformations combined with traditional machine learning clustering methods to identify patterns across all of the attention heads produced across a dataset. This, we believe, will give some insight into the ability of transformers ability to encode information into the attention mechanism, and information about the locality in the layer/head matrix.
+
+The attention computed by each head in each layer of the Transformer architecture is a matrix of values made up elements corresponding to a weight mapping each token in the input sequence to every other token.  The proposed architecture will consist of collecting these attention matrices, and transforming them into a more computationally feasible dimensional space by utilizing a pre-trained self-supervised image classification model for feature extraction.  The output will then be analyzed by more traditional machine learning methods such as KMeans and DBSCAN.  Learned clusters will then be correlated with their corresponding head, layer, and input example for analysis. 
 
 
 ## Contents: outline of files in this repo
@@ -32,7 +34,7 @@ The attention computed by each head in each layer of the Transformer architectur
 • pipeline/
 
 [extract_attentions.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/exploration/extract_attentions.ipynb) - modified run_squad.py code to output raw attention matrices as binary torch pkls  
-[transform_attentions.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/pipeline/transform_attentions.ipynb) - prototyping pipeline, transformed output of extract_attentions to representation in csv form for inital clustering exploration  
+[transform_attentions.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/pipeline/transform_attentions.ipynb) - prototyping raw attentions for inital clustering exploration  
 [extract_transform_attentions.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/pipeline/extract_transform_attentions.ipynb) - 'full' pipeline starting from bert evaluation to dataset output to csv  
 [dataset_segmentation.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/pipeline/dataset_segmentation.ipynb) - sub sampling a cross section of the full 1,123,200 attention representation dataset  
 [remove_index.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/pipeline/remove_index.ipynb) - batch repair to 400GB dataset necessary because of human error
@@ -40,7 +42,7 @@ The attention computed by each head in each layer of the Transformer architectur
     
 • clustering/
 
-[intel_python_clustering.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/intel_python_clustering.ipynb) - testing Intel Python accelerated scikit-learn on representations from the prototyping phase of the pipeline  
+[intel_python_clustering.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/intel_python_clustering.ipynb) - testing Intel Python accelerated scikit-learn, prototyping phase of the pipeline  
 [cuML_PCA_variance.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/cuML_PCA_variance.ipynb) - exploring PCA with attention representations  
 [cuML_PCA_visualization.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/cuML_PCA_visualization.ipynb) - exploring PCA with attention representations  
 [cuML_Dask_grid_search.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/cuML_dbscan_grid_search.ipynb) - determining optimal epsilon and min_samples for DBSCAN  
@@ -80,37 +82,6 @@ run --gpus all -it --rm -p 8888:8888 -p 8787:8787 -p 8786:8786 -v "$(pwd):/rapid
 
 ```
 
-
-## Fine tuning a model
-
-
-HF provides a script, run_squad.py that fine-tunes a Transformer model on one of the two SQuAD (stanford question answering) datasets.  Squad v2 adds the possibilty of an answer not being present in the context provided.  We had to modify this file to use BertForQuestionAnswering instead of AutoModel to load the pre-trained model.  AutoModel acts as a wrapper to accomodate a number of different architectures, giving flexibility to huggingface users looking to fine-tune on the QA task.  Unfortunately this wrapper doesn't respect the 'output_attentions' flag passed into the model config, and simply outputs the string 'attention', which we had to find out the head-scratchingly hard way.  It would appear that the most recent run_squad no longer uses auto_model, but at the time this was a necessary workaround to produce the attention maps for analysis.
-
-The dataset for Squad2 training is found here:
-https://rajpurkar.github.io/SQuAD-explorer/dataset/train-v2.0.json
-
-The training and eval script and pipeline notebook are called with a data_dir parameter ( 'data/squad' ) where it expects to find this file ( and the dev set if evaluating ).
-
-You can run fine tuning from a notebook (link to /bert-fine-tuning/fine-tune.ipynb)), or /bert-fine-tuning/fine-tune.sh . The trained model with associated config files will be output to 'models/bert'.
-
-Evaluating via the eval.sh script will log associated results files to 'models/bert' and to the console.  Our eval run produced these scores:
-
-Results:{
-    'exact': 72.95544512760044,
-    'f1': 76.28942043046025,
-    'total': 11873,
-    'HasAns_exact': 71.42375168690958,
-    'HasAns_f1': 78.10126328793105,
-    'HasAns_total': 5928,
-    'NoAns_exact': 74.48275862068965,
-    'NoAns_f1': 74.48275862068965,
-    'NoAns_total': 5945,
-    'best_exact': 72.95544512760044,
-    'best_exact_thresh': 0.0,
-    'best_f1': 76.28942043046025,
-    'best_f1_thresh': 0.0
-} 
-
 ## Extract attentions from fine-tuned model during evaluation
 
 In exploration/attention_exploration I investigated working with BERT models and visualization.  Comparing and contrasting heads and layers at this level of granularity led motivated working with a larger set to be able to see if we could utilize traditional machine learning methods to make some sense of their relationship, if any could be foun. 
@@ -119,23 +90,33 @@ The relevant code from squad.py file was used in exploration/extract_attentions.
 
 ## Transforming attention matrices to lower dimensional representations
 
-While clearly this wasn't going to be possible for us to produce the entire 130k+ examples dataset worth of attentions due to space limitation, it would give us an opportunity to exlore alternatives and informed the decision to use a resnet model - specifically barlow twins, with the last linear layer removed - to produce a lower dimensionality representation. 
+While clearly this wasn't going to be possible for us to produce the entire 130k+ examples dataset worth of raw attentions due to space limitation, this gave us the opportunity to exlore our options and informed the decision to use the barlow twins model for feature extraction.
 
-Feasability and methods for transforming and analyzing these attention matrices were examing exploration/representations_cpu_exploration.  First transforming the 0-1 floating point values of the attention maps to 0-255, we then fed them to the barlow twins model to reduce our 384x384 sized vectors to a 1x2048 representation, and finally took a look swing at using traditional machine learning methods - KMeans and DBScan.  The amount of time to perform clustering at this scope ( ~2hrs for 2000 squad2 examples ) on CPU proved we would need to look to more computationally efficient methods.
+Our pipeline consisted of the following steps:
 
-At this point I decided to combine the separate pieces of attention matrix extraction and transformation to 2048 value representations.  pipeline/transform_attentions and exploration/transform_prototyping were combined into pipeline/extract_transform_attentions.  To stay within memory constraints, examples were batched into representation format and added to an in-memory dataframe 350 at a time.  Every 5000 examples, this dataframe was written out to file, resulting in 26 ~16gb files representing all 130k squad2 examples.  This took a little ove 5 days running on a machine with a 3090 and i7-9800x.  Unfortunately I had forgotten to add 'index=False' to the to_csv call, and had to run all of the files through /pipeline/remove_index.ipynb to remove the added first index column.
+• Feed squad2 example to fine-tuned BERT  
+• Scale attention values to 0-255  
+• Reshape to (1, 3, 384, 384) tensor  
+• Extract features using modified Barlow Twins  
+• Flatten 12x12 representations  
+• Convert tensors to dataframe columns  
+• Append to dataframe  
 
-## Evaluate clustering algorithms on transformed attentions
+To stay within memory constraints ( under 100gb of RAM ), examples were batched into representation format and added to an in-memory dataframe 350 at a time.  Every 5000 examples, this dataframe was written out to file, resulting in (26) ~16gb files representing all 130k squad2 training examples.
 
-Scaling was a large concern because I wanted to be able to process as much as possible of the squad2 dataset for clustering.  Intel makes a python distribution [link] which allows patching of SKLearn to use multiple cores, and while this looked like a promising alternative, the speed up was not as significant as I had hoped.  In clustering/intel_python_clustering I ran some small experiments and found it ran close to a linear speed-up per additional CPU ( <10x on my home 8 core machine - it appears to support multi-core, but not multi-threading ).  A high compute cloud cloud solution might be a possible solution, but I continued to look elsewhere 
 
-cuML [Link] promised and delivered much greater results - the same small dataset that took >20 minutes on 8 CPUs took less than a minute to perform KMeans and DBScan.  Our total sample size was limited by the amount of GPU VRAM available and Dask allows us to parallelize across multiple GPUs on the same machine.   Ideally we would like to scale this to many more GPUs on one or more cloud instances, but unfortunatly it hasn't been yet possible to get our GPU quotas on Google Cloud approved for a personal project.  While pricy, a few A100s could give us enough VRAM to allow processing a very large subset of our full ~400GB dataset, if not in its entirety.
+## Evaluating clustering algorithms on transformed attentions
 
-In order to get a representational subset of the squad2 examples, I extracted the first 300 squad2 examples from each of the 26 representation files using a snippet of code in clustering/segmentation.ipynb.  300 examples corresponds to 43,200 of the representation exported by the pipeline and takes up ~1GB of disk space.  Dask recommends that the dataset be split into 1-2gb sections before loading, so this also took care of that step for us.
+We knew scaling was going to be of primary concern because we wanted to be able to cover as much as possible of the squad2 dataset.  Intel makes a [patch for Scikit-learn](https://github.com/intel/scikit-learn-intelex) which allows for the use of multiple cores, and while this looked like a promising alternative, the speed-up was not as significant as I had hoped.
 
-##  Analysis of clustering
+The amount of time to perform clustering in this manner ( ~1hrs for 2000 squad2 examples using Intel's parallel implementation of kMeans on CPU ) appeared intractable to scale. We looked into using PCA, but it was found that reducing our dimensionality in this manner resulted in very low explainability.  Rather than lose more information than we already had, we would need to look to more computationally efficient methods.
 
-In clustering/cuML_clustering_Dask_full, we take a look at the clusters identified by kmeans.  Layers and heads columns are added for each row of our dataset so that we can identify possible correlations between clusters, heads and layers.  [ TODO: add example # and # of tokens in example ]
+[cuML](https://github.com/rapidsai/cuml) promised and delivered _much_ faster results - With one drawback - our total sample size was limited by the amount of GPU VRAM available.  Combining Dask and cuML allows us to parallelize kMeans and DBSCAN across multiple GPUs on the same machine.  This increased our capacity to 48gb across (2) RTX-3090.
 
+Ideally we would like to scale this to many more GPUs on one or more cloud instances, but unfortunatly it hasn't been yet possible to get our GPU quotas on Google Cloud approved for a personal project.  While pricy, a few A100s could give us enough VRAM to allow processing a very large subset of our full ~400GB, if not in its entirety.
+
+In order to get a representational subset of the squad2 examples, a number of examples (43,200 rows) were extracted from each of the files output from our pipeline.  I called this process segmentation.  Dask recommends that the dataset be split into 1-2gb sections before loading, so this also took care of that step for us.  There is some memory overhead using Dask/cuML vs. 1 GPU cuML, and kMeans using Dask and cuML was more memory hungry than DBSCAN, so having the dataset segmented this way meant we could have finer grained control over the size of our dataset so as to cluster as large a portion as our VRAM would allow.
+
+Layers and heads columns are added for each row of the resulting cluster labels so that we can investigate correlations between clusters, heads and layers.
 
 
