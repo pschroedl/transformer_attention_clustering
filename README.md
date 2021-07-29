@@ -4,12 +4,49 @@ A Springboard Capstone Project
 ## Proposal:
 The Transformer architecture has pushed SOTA NLP  to new heights in the past few years.  As with many Deep Learning architectures, explainability is low and getting insight into why these mechanisms work so well in specific situations can be problematic.
 
-Projects such as BertViz ( https://github.com/jessevig/bertviz ) and Tensor2Tensor (Tensor2Tensor visualization tool) work towards solving this problem by providing tools to visualize the attention patterns produced by one or more attention heads across layers of a Transformer, or the query and key vectors that are used to compute attention heads.
+Projects such as [BertViz](https://github.com/jessevig/bertviz), [Tensor2Tensor](https://github.com/tensorflow/tensor2tensor), and [Captum](https://captum.ai) work towards solving this problem by providing tools to visualize the attention patterns produced by one or more attention heads across layers of a Transformer, or the query and key vectors that are used to compute attention heads.
 
-While these type of visualization of the attention heads is interesting, it is very difficult for the human eye to correlate and find meaning in the patterns in these images - especially across multiple input examples.  I propose to utilize a pipeline of transformations and traditional machine learning analysis and clustering methods to identify patterns across all of the attention heads produced across a dataset. This, I believe, will give some insight into the ability of transformers ability to encode information into the attention mechanism, and information about the locality in the layer/head matrix.
+While these type of visualizations of the attention heads are interesting, and can definitely provide insight into specific examples, it is very difficult for the human eye to correlate and find meaning in the patterns in these images - especially across many heads,layers, and input examples.  I propose to utilize a pipeline of transformations and traditional machine learning analysis and clustering methods to identify patterns across all of the attention heads produced across a dataset. This, I believe, will give some insight into the ability of transformers ability to encode information into the attention mechanism, and information about the locality in the layer/head matrix.
 
 The attention computed by each head in each layer of the Transformer architecture is a matrix of values made up elements corresponding to the mapping of each token in the input sequence to every other token.  The proposed architecture will consist of collecting these attention matrices, and transforming them into a more computationally feasible dimensional space by utilizing a SOTA image classification model for feature extraction.  The output will then be analyzed by more traditional machine learning methods such as KMeans.  Learned clusters can then be correlated with their corresponding head, layer, and input example for insight. 
 
+
+## Contents: outline of files in this repo
+
+• bert_fine_tuning/
+
+[run_squad.py](https://github.com/pschroedl/transformer_attention_clustering/blob/main/bert_fine_tuning/run_squad.py) - modified version of huggingface provided script
+[fine_tuning.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/bert_fine_tuning/fine-tune.ipynb) - a wrapper around the cli call to run_squad.py
+[fine_tune.sh](https://github.com/pschroedl/transformer_attention_clustering/blob/main/bert_fine_tuning/fine-tune.sh) - script calling run_sqad for fine-tuning including cli parameters
+[eval.sh](https://github.com/pschroedl/transformer_attention_clustering/blob/main/bert_fine_tuning/eval.sh) - script calling run_squad for evaluation including cli parameters
+[eval.log](https://github.com/pschroedl/transformer_attention_clustering/blob/main/bert_fine_tuning/eval.log) - evaluation output for our model
+
+• exploration/
+
+(These exploratory files are included, as well as the separate extract/transform steps in protoyping the pipeline, in order to provide some insight into the mechanisms of transformation used)
+
+[attention_exploration.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/exploration/attention_exploration.ipynb) - visualization and experimentation with attention output from various huggingface Transformer implementations  
+[transform_prototyping.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/exploration/transform_prototyping.ipynb) - prototyping individual steps required to produce desired representations from attentions  
+[transform_representation.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/exploration/transform_representation_exploration.ipynb) - more working the process of data transformation  
+
+• pipeline/
+
+[extract_attentions.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/exploration/extract_attentions.ipynb) - modified run_squad.py code to output raw attention matrices as binary torch pkls  
+[transform_attentions.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/pipeline/transform_attentions.ipynb) - prototyping pipeline, transformed output of extract_attentions to representation in csv form for inital clustering exploration  
+[extract_transform_attentions.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/pipeline/extract_transform_attentions.ipynb) - 'full' pipeline starting from bert evaluation to dataset output to csv  
+[dataset_segmentation.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/pipeline/dataset_segmentation.ipynb) - sub sampling a cross section of the full 1,123,200 attention representation dataset  
+[remove_index.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/pipeline/remove_index.ipynb) - batch repair to 400GB dataset necessary because of human error
+
+    
+• clustering/
+
+[intel_python_clustering.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/intel_python_clustering.ipynb) - testing Intel Python accelerated scikit-learn on representations from the prototyping phase of the pipeline  
+[cuML_PCA_variance.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/cuML_PCA_variance.ipynb) - exploring PCA with attention representations  
+[cuML_PCA_visualization.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/cuML_PCA_visualization.ipynb) - exploring PCA with attention representations  
+[cuML_Dask_grid_search.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/cuML_dbscan_grid_search.ipynb) - determining optimal epsilon and min_samples for DBSCAN  
+[cuML_Dask_optimalK.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/cuML_Dask_optimalK.ipynb) - determining optimal k for kMeans  
+[cuML_Dask_kMeans_full.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/cuML_Dask_kMeans_full.ipynb) - clustering segmented dataset with Dask + cuML kMeans  
+[cuML_Dask_dbscan_full.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/cuML_dbscan_full.ipynb) - clustering segmented dataset with Dask + cuML DBSCAN
 
 ## Running the code
 
