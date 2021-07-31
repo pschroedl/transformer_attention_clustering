@@ -36,7 +36,7 @@ The attention computed by each head in each layer of the Transformer architectur
 [extract_attentions.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/exploration/extract_attentions.ipynb) - modified run_squad.py code to output raw attention matrices as binary torch pkls  
 [transform_attentions.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/pipeline/transform_attentions.ipynb) - prototyping raw attentions for inital clustering exploration  
 [extract_transform_attentions.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/pipeline/extract_transform_attentions.ipynb) - 'full' pipeline starting from bert evaluation to dataset output to csv  
-[dataset_segmentation.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/pipeline/dataset_segmentation.ipynb) - sub sampling a cross section of the full 1,123,200 attention representation dataset  
+[dataset_partitioning.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/pipeline/dataset_partitioning.ipynb) - sub sampling a cross section of the full 1,123,200 attention representation dataset  
 [remove_index.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/pipeline/remove_index.ipynb) - batch repair to 400GB dataset necessary because of human error
 
     
@@ -109,14 +109,16 @@ To stay within memory constraints ( under 100gb of RAM ), examples were batched 
 
 We knew scaling was going to be of primary concern because we wanted to be able to cover as much as possible of the squad2 dataset.  Intel makes a [patch for Scikit-learn](https://github.com/intel/scikit-learn-intelex) which allows for the use of multiple cores, and while this looked like a promising alternative, the speed-up was not as significant as I had hoped.
 
-The amount of time to perform clustering in this manner ( ~1hrs for 2000 squad2 examples using Intel's parallel implementation of kMeans on CPU ) appeared intractable to scale. We looked into using PCA, but it was found that reducing our dimensionality in this manner resulted in very low explainability.  Rather than lose more information than we already had, we would need to look to more computationally efficient methods.
+In [intel_python_clustering.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/intel_python_clustering.ipynb) a smaller size dataset of 100 squad2 examples ( 14400 attention heads ), kMeans on 8 cores shows a roughly linear improvement from 10 minutes to 1.5 minutes.
 
-[cuML](https://github.com/rapidsai/cuml) promised and delivered _much_ faster results - With one drawback - our total sample size was limited by the amount of GPU VRAM available.  Combining Dask and cuML allows us to parallelize kMeans and DBSCAN across multiple GPUs on the same machine.  This increased our capacity to 48gb across (2) RTX-3090.
+On a larger set - the 2000 squad2 example output from pipeline/transform_attentions.ipynb - speedup was similar (~7x) and took over 45x longer to cluster with only 2x the # of rows.
 
-Ideally we would like to scale this to many more GPUs on one or more cloud instances, but unfortunatly it hasn't been yet possible to get our GPU quotas on Google Cloud approved for a personal project.  While pricy, a few A100s could give us enough VRAM to allow processing a very large subset of our full ~400GB, if not in its entirety.
+[cuML](https://github.com/rapidsai/cuml) promised and delivered _much_ faster results - With one drawback - our total sample size was limited by the amount of GPU VRAM available.  Combining Dask and cuML allows us to parallelize kMeans and DBSCAN across multiple GPUs on the same machine.  This increased our capacity to 48gb across two Nvidia RTX-3090s.
 
-In order to get a representational subset of the squad2 examples, a number of examples (43,200 rows) were extracted from each of the files output from our pipeline.  I called this process segmentation.  Dask recommends that the dataset be split into 1-2gb sections before loading, so this also took care of that step for us.  There is some memory overhead using Dask/cuML vs. 1 GPU cuML, and kMeans using Dask and cuML was more memory hungry than DBSCAN, so having the dataset segmented this way meant we could have finer grained control over the size of our dataset so as to cluster as large a portion as our VRAM would allow.
+In order to get a representational cross-section of the squad2 examples and more easily fine tune the size of our dataset to fit into VRAM, in [extract_attentions.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/exploration/extract_attentions.ipynb) 300 examples were extracted from each of the 26 files making up our whole dataset.
+
+Based on findings in [cuML_Dask_optimalK.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/cuML_Dask_optimalK.ipynb) we performed kMeans clustering on our dataset in [cuML_Dask_kMeans_full.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/cuML_Dask_kMeans_full.ipynb)
 
 Layers and heads columns are added for each row of the resulting cluster labels so that we can investigate correlations between clusters, heads and layers.
 
-
+Running a grid search to find optimal parameters for DBscan in [cuML_Dask_grid_search.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/cuML_dbscan_grid_search.ipynb), we proceeded to cluster in [cuML_Dask_dbscan_full.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/cuML_dbscan_full.ipynb), also adding columns to the result for analysis and visualization.
