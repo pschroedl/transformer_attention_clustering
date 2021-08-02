@@ -1,0 +1,10 @@
+## Proposal:
+The Transformer architecture has pushed state-of-the-art Natural Language Processing to new heights in the past few years.  As with so many Deep Learning architectures, explainability is low and getting insight into why these mechanisms work so well in specific situations can be problematic.
+
+Projects such as [BertViz](https://github.com/jessevig/bertviz), [Tensor2Tensor](https://github.com/tensorflow/tensor2tensor), and [Captum](https://captum.ai) work towards solving this problem by providing tools to visualize the attention patterns produced by one or more attention heads across layers of a Transformer, or the query and key vectors that are used to compute attention heads.
+
+While these type of visualizations of the attention heads are ... visually interesting, and can definitely provide insight into specific examples, it is very difficult for the human eye to correlate and find meaning in the patterns in these images - especially across many heads,layers, and input examples.
+
+Here we propose to utilize a series of transformations combined with traditional machine learning clustering methods to identify patterns across all of the attention heads produced across a dataset. This, we believe, will give some insight into the ability of transformers ability to encode information into the attention mechanism, and information about the locality in the layer/head matrix.
+
+The attention computed by each head in each layer of the Transformer architecture is a matrix of values made up elements corresponding to a weight mapping each token in the input sequence to every other token.  The proposed architecture will consist of collecting these attention matrices, and transforming them into a more computationally feasible dimensional space by utilizing a pre-trained self-supervised image classification model for feature extraction.  The output will then be analyzed by more traditional machine learning methods such as KMeans and DBSCAN.  Learned clusters will then be correlated with their corresponding head, layer, and input example for analysis. 
