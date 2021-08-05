@@ -6,7 +6,9 @@ A pre-trained Bert for Question-Answering Model (huggingface) is fine-tuned on t
 
 Each example, when evaluated on the fine-tuned model, produces a 12x12 matrix of attentions, each consisting of attention weights mapping each token to all tokens ( 384x384 ).
 
-A Trained Barlow twins model ( with the last, linear classifier layer removed ) is fed a scaled version (0-255) of each of the layer and heads (12x12) attention weights to produce vectors of 2048 32 bit floats.  Using the first 130,000 squad2 examples the resulting dataset is over 18M data points and takes up a little more than 400GB in CSV format.
+A Trained Barlow twins model ( with the last, linear classifier layer removed ) is fed a scaled version (0-255) of each of the layer and heads (12x12) attention weights to produce vectors of 2048 32 bit floats.
+
+Using the 131,944 squad2 training set examples downloaded from [SQuAD-explorer](https://rajpurkar.github.io/SQuAD-explorer/) [(direct file link)](https://rajpurkar.github.io/SQuAD-explorer/dataset/train-v2.0.json) the resulting dataset is over 18M data points and takes up a little more than 400GB as 26 separate CSVs ~16gb apiece.  The dataset is (public online)[https://storage.googleapis.com/representations_central/] under the folder /datasets/7-18-21/.
 
 Initially using Intel Python enhanced ScikitLearn is investigated to scale, Dask + cuML were settled on for their extraordinary performance.  Dimensionality reduction and clustering algorithms distributed across multiple GPUs is performed.
 
@@ -14,7 +16,12 @@ Resultant cluster labels are then correllated with their position in the 12 x 12
 
 Clustering using DBScan largely produced a single dominant cluster favoring the earlier layers of the bert architecture.  Noise was primarily made up of later layers.  This suggests that variance increases as the input data travels through subsequent layers.  Additional, much smaller clusters were also found in which data points corresponded to a single or few common heads within groupings of adjacent examples in the squad2 dataset.  The squad2 examples were sampled sequentially so neighboring examples share the same provided context with differing questions.
 
+
 An additional clustering step was also performed, taking the largest cluster and re-running dbscan.  This produced a larger number of 'satellite' clusters containing a much more evenly distributed group of heads.
+
+
+
+
 
 A Springboard Capstone Project: [Proposal](proposal.md)
 
