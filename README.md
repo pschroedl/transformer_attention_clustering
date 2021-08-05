@@ -66,28 +66,12 @@ A Springboard Capstone Project: [Proposal](proposal.md)
 
 ## Running the code
 
-If you're running a local Jupyter instance, You'll want to set up your enviroment
-
-``` bash
-$ python3 -m venv myenv
-$ source myenv/bin/activate
-$ pip install torch==1.5.0+cu92 torchvision==0.6.0+cu92 -f https://download.pytorch.org/whl/torch_stable.html
-$ pip install transformers==2.5.1
-$ pip install wikipedia==1.4.0
-```
-
-I used Docker and the nvidia-docker image, particularly when working with jupyter notebooks
+I used Docker and the tensorflow:latest-gpu_juptyer image for inital exploration and the extract-transform pipeline
 
 ```
-insert nvidia docker command here
+sudo docker run --rm --gpus all -p 8888:8888 -v $(pwd):/tf/notebooks tensorflow/tensorflow:latest-gpu-jupyter
 ```
 
-Short of building a new custom image, or if working in a cloud environment like colab or paperspace, I typically used pip the following to install torch, transformers, and other necessary libraries as needed
-
-```
-!pip3 install torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html
-!pip install transformers
-```
 
 For gpu accelerated clustering and dimensionality reduction, I leveraged cuML and Dask - which can be easily utilized with the Rapids Docker image, which also hosts a jupyter server:
 
@@ -95,6 +79,14 @@ For gpu accelerated clustering and dimensionality reduction, I leveraged cuML an
 run --gpus all -it --rm -p 8888:8888 -p 8787:8787 -p 8786:8786 -v "$(pwd):/rapids/notebooks/host/" rapidsai/rapidsai:21.06-cuda11.0-runtime-ubuntu18.04-py3.7
 
 ```
+
+Both images lacked some libraries, so current versions of transformers and others were pip installed in a notebook or juptyer terminal as needed.  However, torch needed to match the version of our installed nvidia cuda drivers:
+
+```
+pip3 install torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html
+```
+Relevant versions for other cuda installations can be found on [pytorch.org](https://pytorch.org/get-started/locally/)
+
 
 ## Extract attentions from fine-tuned model during evaluation
 
