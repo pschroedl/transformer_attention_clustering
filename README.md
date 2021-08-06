@@ -14,9 +14,13 @@ Initially benchmarking Intel Python enhanced Scikit-Learn as an option for scali
 
 Resultant cluster labels are then correlated with their position in the 12 x 12 layer/head matrix corresponding to attentions  created when evaluating a single Squad2 QA example.
 
-Clustering using DBScan largely produced two dominant clusters, one cluster favoring the earlier layers of the bert architecture, and the noise (-1 indexed) cluster primarily made up of later layers.  This suggests that distance between our representations of heads increases as the input data travels through subsequent layers.  
+When visualizing the density of points across the layer/head matrix in clusters created by kMeans, there is visible horizontal banding, a few being all at the last layer and some almost all at the first layer, with many more across part but not all of the middle layers.  It would appear that some of the structure of the architecture of this transformer has been preserved through our scaling and transformation. [kMeans_cluster_analysis.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/kMeans.ipynb) 
 
-The squad2 examples were sampled sequentially so neighboring examples share the same provided context with differing questions.When looking at some of the much smaller clusters it was that their data points corresponded to a single or few common heads within groupings of adjacent examples in the squad2 dataset.
+Clustering using DBScan largely produced two dominant clusters, one cluster favoring the earlier layers of the bert architecture, and the noise (-1 indexed) cluster primarily made up of later layers.  This suggests that distance between our representations of heads increases as the input data travels through subsequent layers, i.e information 'learned' by earlier heads is less complex and less specific?  It seems intuitively correct and possibly confirmed by these clusterings  
+
+The squad2 examples were sampled sequentially so neighboring examples share the same provided context with differing questions. The clusters outside of the main, largest cluster and noise that are identified many times contain only a single head.  At the end of the notebook [dbscan_cluster_analysis.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/dbscan_cluster_analysis.ipynb), we see that some of these points indices are separated by 144, meaning they come from a consecutive sequence of examples.  In squad2, there are typically a number of questions applied to the same context.  Since examples contain both context and question in their input tokens, it makes sense that these examples would have heads working similarly, assigning nearly identical weight mappings since the input shares so many tokens.
+
+In many cases though, where there are more than just a few heads in the cluster, some of the same heads appear in this same cluster, despite being tens of thousands of examples apart - clearly not referring to the same context.
 
 
 A Springboard Capstone Project: [Proposal](proposal.md)
