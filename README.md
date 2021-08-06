@@ -12,11 +12,11 @@ Using the 131,944 squad2 training set examples downloaded from [SQuAD-explorer](
 
 Initially benchmarking Intel Python enhanced Scikit-Learn as an option for scaling, Dask + cuML were settled on for their extraordinary performance.  Dimensionality reduction and clustering algorithms distributed across multiple GPUs is performed.
 
-Resultant cluster labels are then correlated with their position in the 12 x 12 layer/head matrix corresponding to attentions  created when evaluating a single Squad2 QA example.
+Resultant cluster labels are then correlated with their position in the 12 x 12 layer/head matrix corresponding to attentions created when evaluating a single Squad2 QA example and visualized.
 
-When visualizing the density of points across the layer/head matrix in clusters created by kMeans, there is visible horizontal banding, a few being all at the last layer and some almost all at the first layer, with many more across part but not all of the middle layers.  It would appear that some of the structure of the architecture of this transformer has been preserved through our scaling and transformation. [kMeans_cluster_analysis.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/kMeans.ipynb)
+## Findings:
 
-Also, 
+When visualizing the density of points across the layer/head matrix in clusters created by kMeans, there is visible horizontal banding, a few being all at the last layer and some almost all at the first layer, with many more across part but not all of the middle layers.  It would appear that some of the structure of the architecture of this transformer has been preserved through our scaling and transformation. [kMeans_cluster_analysis.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/kMeans_cluster_analysis.ipynb)  
 
 Clustering using DBScan largely produced two dominant clusters, one cluster favoring the earlier layers of the bert architecture, and the noise (-1 indexed) cluster primarily made up of later layers.  This suggests that distance between our representations of heads increases as the input data travels through subsequent layers, i.e information 'learned' by earlier heads is less complex and less specific?  It seems intuitively correct and possibly confirmed by these clusterings  
 
@@ -63,7 +63,7 @@ A Springboard Capstone Project: [Proposal](proposal.md)
 
 [optimalK.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/optimalK.ipynb) - determining optimal k for kMeans  
 [kMeans.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/kMeans.ipynb) - clustering segmented dataset with Dask + cuML kMeans  
-[kMeans_cluster_analysis.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/kMeans.ipynb) - visualization of kmeans clustering results
+[kMeans_cluster_analysis.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/kMeans_cluster_analysis.ipynb) - visualization of kmeans clustering results
 
 [dbscan_grid_search.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/dbscan_grid_search.ipynb) - observing cluster count vs. noise for various epsilon and min_samples for DBSCAN  
 [dbscan_output.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/dbscan_output.ipynb) - DBSCAN run with layer/head indexed CSVs saved for analysis  
@@ -133,7 +133,7 @@ In order to get a representational cross-section of the squad2 examples and more
 
 Based on findings in [optimalK.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/optimalK.ipynb) we performed kMeans clustering on our dataset in [kMeans.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/kMeans.ipynb)
 
-Layers and heads columns are added for each row of the resulting cluster labels so that we can investigate correlations between clusters, heads and layers.
+Layers and heads columns are added for each row of the resulting cluster labels so that we can investigate correlations between clusters, heads and layers and the output is visualized in [kMeans_cluster_analysis.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/kMeans_cluster_analysis.ipynb)  
 
 Running a grid search to find optimal parameters for DBscan in [dbscan_grid_search.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/dbscan_grid_search.ipynb), we proceeded to cluster in [dbscan_output.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/dbscan_output.ipynb), also adding layer/head columns to the result in cluster label dataframe for analysis and visualization in [dbscan_cluster_analysis.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/dbscan_cluster_analysis.ipynb).
 
