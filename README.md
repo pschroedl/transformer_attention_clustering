@@ -14,7 +14,9 @@ Initially benchmarking Intel Python enhanced Scikit-Learn as an option for scali
 
 Resultant cluster labels are then correlated with their position in the 12 x 12 layer/head matrix corresponding to attentions  created when evaluating a single Squad2 QA example.
 
-When visualizing the density of points across the layer/head matrix in clusters created by kMeans, there is visible horizontal banding, a few being all at the last layer and some almost all at the first layer, with many more across part but not all of the middle layers.  It would appear that some of the structure of the architecture of this transformer has been preserved through our scaling and transformation. [kMeans_cluster_analysis.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/kMeans.ipynb) 
+When visualizing the density of points across the layer/head matrix in clusters created by kMeans, there is visible horizontal banding, a few being all at the last layer and some almost all at the first layer, with many more across part but not all of the middle layers.  It would appear that some of the structure of the architecture of this transformer has been preserved through our scaling and transformation. [kMeans_cluster_analysis.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/kMeans.ipynb)
+
+Also, 
 
 Clustering using DBScan largely produced two dominant clusters, one cluster favoring the earlier layers of the bert architecture, and the noise (-1 indexed) cluster primarily made up of later layers.  This suggests that distance between our representations of heads increases as the input data travels through subsequent layers, i.e information 'learned' by earlier heads is less complex and less specific?  It seems intuitively correct and possibly confirmed by these clusterings  
 
