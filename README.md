@@ -10,17 +10,13 @@ A Trained Barlow twins model ( with the last, linear classifier layer removed ) 
 
 Using the 131,944 squad2 training set examples downloaded from [SQuAD-explorer](https://rajpurkar.github.io/SQuAD-explorer/) [(direct file link)](https://rajpurkar.github.io/SQuAD-explorer/dataset/train-v2.0.json) the resulting dataset is over 18M data points and takes up a little more than 400GB as 26 separate CSVs ~16gb apiece.  The dataset is public online at https://storage.googleapis.com/representations_central/ under the folder /datasets/7-18-21/.
 
-Initially using Intel Python enhanced ScikitLearn is investigated to scale, Dask + cuML were settled on for their extraordinary performance.  Dimensionality reduction and clustering algorithms distributed across multiple GPUs is performed.
+Initially benchmarking Intel Python enhanced Scikit-Learn as an option for scaling, Dask + cuML were settled on for their extraordinary performance.  Dimensionality reduction and clustering algorithms distributed across multiple GPUs is performed.
 
-Resultant cluster labels are then correllated with their position in the 12 x 12 layer/head matrix corresponding to attentions  created when evaluating a single Squad2 QA example.
+Resultant cluster labels are then correlated with their position in the 12 x 12 layer/head matrix corresponding to attentions  created when evaluating a single Squad2 QA example.
 
-Clustering using DBScan largely produced a single dominant cluster favoring the earlier layers of the bert architecture.  Noise was primarily made up of later layers.  This suggests that variance increases as the input data travels through subsequent layers.  Additional, much smaller clusters were also found in which data points corresponded to a single or few common heads within groupings of adjacent examples in the squad2 dataset.  The squad2 examples were sampled sequentially so neighboring examples share the same provided context with differing questions.
+Clustering using DBScan largely produced two dominant clusters, one cluster favoring the earlier layers of the bert architecture, and the noise (-1 indexed) cluster primarily made up of later layers.  This suggests that distance between our representations of heads increases as the input data travels through subsequent layers.  
 
-
-An additional clustering step was also performed, taking the largest cluster and re-running dbscan.  This produced a larger number of 'satellite' clusters containing a much more evenly distributed group of heads.
-
-
-
+The squad2 examples were sampled sequentially so neighboring examples share the same provided context with differing questions.When looking at some of the much smaller clusters it was that their data points corresponded to a single or few common heads within groupings of adjacent examples in the squad2 dataset.
 
 
 A Springboard Capstone Project: [Proposal](proposal.md)
@@ -57,13 +53,19 @@ A Springboard Capstone Project: [Proposal](proposal.md)
 • clustering/
 
 [intel_python_clustering.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/intel_python_clustering.ipynb) - benchmarking Intel Python accelerated scikit-learn  
-[cuML_PCA_variance.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/cuML_PCA_variance.ipynb) - exploring PCA with attention representations  
-[cuML_PCA_visualization.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/cuML_PCA_visualization.ipynb) - exploring PCA with attention representations  
-[cuML_Dask_grid_search.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/cuML_dbscan_grid_search.ipynb) - determining optimal epsilon and min_samples for DBSCAN  
-[cuML_Dask_optimalK.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/cuML_Dask_optimalK.ipynb) - determining optimal k for kMeans  
-[cuML_Dask_kMeans_full.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/cuML_Dask_kMeans_full.ipynb) - clustering segmented dataset with Dask + cuML kMeans  
-[cuML_Dask_dbscan_full.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/cuML_dbscan_full.ipynb) - clustering segmented dataset with Dask + cuML DBSCAN
+[PCA_visualization.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/PCA_visualization.ipynb) - exploring PCA with attention representations  
 
+[optimalK.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/optimalK.ipynb) - determining optimal k for kMeans  
+[kMeans.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/kMeans.ipynb) - clustering segmented dataset with Dask + cuML kMeans  
+[kMeans_cluster_analysis.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/kMeans.ipynb) - visualization of kmeans clustering results
+
+[dbscan_grid_search.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/dbscan_grid_search.ipynb) - observing cluster count vs. noise for various epsilon and min_samples for DBSCAN  
+[dbscan_output.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/dbscan_output.ipynb) - DBSCAN run with layer/head indexed CSVs saved for analysis  
+[dbscan_cluster_analysis.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/dbscan_cluster_analysis.ipynb) - visualizing clusters  
+
+(note: in progress)
+[dbscan_output-iterative.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/dbscan_output-iterative.ipynb) - DBSCAN re-run and layer/head indexed CSVs saved for analysis  
+[dbscan_cluster_analysis-iterative.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/dbscan_cluster_analysis-iterative.ipynb) - visualizing iterative re-clustering results  
 ## Running the code
 
 I used Docker and the tensorflow:latest-gpu_juptyer image for inital exploration and the extract-transform pipeline
@@ -123,8 +125,10 @@ On a larger set - the 2000 squad2 example output from pipeline/transform_attenti
 
 In order to get a representational cross-section of the squad2 examples and more easily fine tune the size of our dataset to fit into VRAM, in [extract_attentions.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/exploration/extract_attentions.ipynb) 300 examples were extracted from each of the 26 files making up our whole dataset.
 
-Based on findings in [cuML_Dask_optimalK.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/cuML_Dask_optimalK.ipynb) we performed kMeans clustering on our dataset in [cuML_Dask_kMeans_full.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/cuML_Dask_kMeans_full.ipynb)
+Based on findings in [cuML_Dask_optimalK.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/cuML_Dask_optimalK.ipynb) we performed kMeans clustering on our dataset in [kMeans.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/kMeans.ipynb)
 
 Layers and heads columns are added for each row of the resulting cluster labels so that we can investigate correlations between clusters, heads and layers.
 
-Running a grid search to find optimal parameters for DBscan in [cuML_Dask_grid_search.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/cuML_dbscan_grid_search.ipynb), we proceeded to cluster in [cuML_Dask_dbscan_full.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/cuML_dbscan_full.ipynb), also adding columns to the result for analysis and visualization.
+Running a grid search to find optimal parameters for DBscan in [dbscan_grid_search.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/dbscan_grid_search.ipynb), we proceeded to cluster in [dbscan_output.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/dbscan_output.ipynb), also adding layer/head columns to the result in cluster label dataframe for analysis and visualization in [dbscan_cluster_analysis.ipynb]https://github.com/pschroedl/transformer_attention_clustering/blob/main/clustering/dbscan_cluster_analysis.ipynb).
+
+Lastly , we've taken the samples from largest non-noise cluster (0) from dbscan runs with epsilon 0.6 and 0.7, and re ran a grid search, again outputting a dataframe augmented with layer and head columns - but not realizing initially that the layer and head columns needed to be maintained from the original extracted clustered points
