@@ -36,14 +36,14 @@ A Springboard Capstone Project: [Proposal](proposal.md)
 (These exploratory files are included, as well as the separate extract/transform steps in protoyping the pipeline, in order to provide some insight into the mechanisms of transformation used)
 
 [attention_exploration.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/exploration/attention_exploration.ipynb) - visualizing various huggingface Transformer outputs  
-[transform_prototyping.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/exploration/transform_prototyping.ipynb) - prototyping transformation to representations
+[transform_prototyping.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/exploration/transform_prototyping.ipynb) - prototyping transformation to representations  
 [transform_representation.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/exploration/transform_representation_exploration.ipynb) - more exploration of process of data transformation  
 
 • pipeline/
 
 ![pipeline](/img/pipeline_files.png)
 
-[extract_attentions.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/exploration/extract_attentions.ipynb) - modified run_squad.py to output raw attention matrices
+[extract_attentions.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/exploration/extract_attentions.ipynb) - modified run_squad.py to output raw attention matrices  
 [transform_attentions.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/pipeline/transform_attentions.ipynb) - prototyping raw attentions for inital clustering exploration  
 [extract_transform_attentions.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/pipeline/extract_transform_attentions.ipynb) -  from bert evaluation to dataset output to csv  
 [dataset_partitioning.ipynb](https://github.com/pschroedl/transformer_attention_clustering/blob/main/pipeline/dataset_partitioning.ipynb) - sub sampling a cross section of the dataset  
