@@ -8,7 +8,7 @@ Each example, when evaluated on the fine-tuned model, produces a 12x12 matrix of
 
 A Trained Barlow twins model ( with the last, linear classifier layer removed ) is fed a scaled version (0-255) of each of the layer and heads (12x12) attention weights to produce vectors of 2048 32 bit floats.
 
-Using the 131,944 squad2 training set examples downloaded from [SQuAD-explorer](https://rajpurkar.github.io/SQuAD-explorer/) [(direct file link)](https://rajpurkar.github.io/SQuAD-explorer/dataset/train-v2.0.json) the resulting dataset is over 18M data points and takes up a little more than 400GB as 26 separate CSVs ~16gb apiece.  The dataset is public online at https://storage.googleapis.com/representations_central/ under the folder /datasets/7-18-21/.
+Using the 131,944 squad2 training set examples downloaded from [SQuAD-explorer](https://rajpurkar.github.io/SQuAD-explorer/) [(direct file link)](https://rajpurkar.github.io/SQuAD-explorer/dataset/train-v2.0.json) the resulting dataset is over 18M data points and takes up a little more than 400GB as 26 separate CSVs ~16gb apiece.  The full dataset listing is in a public google storage bucket at https://storage.googleapis.com/representations_central/ under the folder /datasets/7-18-21/ and a subset ( the first 300 examples of each of the full CSVs ) is available as 26 CSVs at ~1gb each under the folder /datasets/partitions.
 
 Initially benchmarking Intel Python enhanced Scikit-Learn as an option for scaling, Dask + cuML were settled on for their extraordinary performance.  Dimensionality reduction and clustering algorithms distributed across multiple GPUs is performed.
 
