@@ -1,12 +1,13 @@
-# Attention Distribution Across Heads and Layers in a Fine-Tuned Transformer
+# Attention Distribution
+### Across Heads and Layers of a Bert-Base Transformer fine-tuned on QA
 
 ![pipeline](./img/pipeline_w_images.png)
 ## Overview:
 First, a Question-Answering Model (huggingface) model is loaded with pre-trained bert-base-cased weights, and is fine-tuned on the Squad2 Dataset, using a max-token size of 384.
 
-Each example from the dataset, when evaluated on the fine-tuned model, produces 144 heads worth of attention matrices - 12 heads per layer, of which their are also 12.  Each head consists of weights mapping each token to all tokens ( 384x384 ).  These 'attention matrices' are collected for all 131,944 squad2 training set examples downloaded from [SQuAD-explorer](https://rajpurkar.github.io/SQuAD-explorer/) [(direct file link)].
+Each example from the dataset, when evaluated on the fine-tuned model, produces 144 heads worth of attention matrices - 12 heads per layer, of which there are also 12.  Each head consists of weights mapping each token to all tokens ( 384x384, or 147,456 parameters ).  These 'attention matrices' are collected for all 131,944 squad2 training set examples downloaded from [SQuAD-explorer](https://rajpurkar.github.io/SQuAD-explorer/) [(direct file link)].
 
-Each attention matrix is rescaled to the 0-255 range and fed to a trained Barlow Twins model ( with the last, linear classifier layer removed ) to produce a representation as a 2048 dimension vector.  This feature extraction reduces the dimensionality by an order of magnitude.
+Each attention matrix is rescaled to the 0-255 range and fed to a trained Barlow Twins model ( with the last, linear classifier layer removed ) to produce a representation as a 2048 dimension vector.  This feature extraction reduces the dimensionality by nearly an order of magnitude.
 
 Using the (https://rajpurkar.github.io/SQuAD-explorer/dataset/train-v2.0.json) the resulting dataset is over 18M data points and takes up a little more than 400GB as 26 separate CSVs ~16gb apiece.  The full dataset listing is in a public google storage bucket at https://storage.googleapis.com/representations_central/ under the folder /datasets/7-18-21/ and a subset ( the first 300 examples of each of the full CSVs ) is available as 26 CSVs at ~1gb each under the folder /datasets/partitions.
 
