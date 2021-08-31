@@ -3,9 +3,9 @@
 
 ![pipeline](./img/pipeline_w_images.png)
 ## Overview:
-First, a Question-Answering Model (huggingface) model is loaded with pre-trained bert-base-cased weights, and is fine-tuned on the Squad2 Dataset, using a max-token size of 384.
+A Question-Answering Model (huggingface) model was loaded with pre-trained bert-base-cased weights, and fine-tuned on the Squad2 Dataset, using a max-token size of 384.
 
-Each example from the dataset, when evaluated on the fine-tuned model, produces 144 heads worth of attention matrices - 12 heads per layer, of which there are also 12.  Each head consists of weights mapping each token to all tokens ( 384x384, or 147,456 parameters ).  These 'attention matrices' are collected for all 131,944 squad2 training set examples downloaded from [SQuAD-explorer](https://rajpurkar.github.io/SQuAD-explorer/) [(direct file link)].
+Then, examples from the training dataset were evaluated on the fine-tuned model, producing 144 heads worth of attention matrices - 12 heads per layer, of which there are also 12.  Weights mapping each token to all tokens ( 384x384, or 147,456 parameters per attention matrix) are collected for all 131,944 squad2 training set examples downloaded from [SQuAD-explorer](https://rajpurkar.github.io/SQuAD-explorer/) [(direct file link)].
 
 Each attention matrix is rescaled to the 0-255 range and fed to a trained Barlow Twins model ( with the last, linear classifier layer removed ) to produce a representation as a 2048 dimension vector.  This feature extraction reduces the dimensionality by nearly an order of magnitude.
 
